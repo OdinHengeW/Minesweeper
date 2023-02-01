@@ -1,9 +1,9 @@
 import random
 import pygame, sys
 from pygame.locals import *
+import ctypes
 
 pygame.init()
-
 
 #colors
 WHITE = (255,255,255)
@@ -12,22 +12,21 @@ GREEN = (0,255,0)
 BLACK = (0,0,0)
 
 #globals
+SCRSIZE = ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1) #add for mac also
 
-SIZEX = 10
-SIZEY = 12
-SQZIZE = 60
-DIFFICULTY = 30
+SIZEX = 30
+SIZEY = 16
+SQZIZE = int((SCRSIZE[1] - (SCRSIZE[1] * 0.1))/SIZEY)
+DIFFICULTY = 99
 WIDTH = SIZEX * SQZIZE
 HEIGHT = SIZEY * SQZIZE
 myfont = pygame.font.SysFont("monocraft", 20)
 fleg = myfont.render("fleg", 1, (255,255,255))
+firstclick = True
 
 def lclick(event):
-    print(event.button)
-    
     x = event.pos[0]//SQZIZE
     y = event.pos[1]//SQZIZE
-    print(x, y)
     
     #print(mines[0])
     show_what(x, y)
@@ -62,7 +61,7 @@ def draw():
     pygame.display.update()
         
 def rclick(event):
-    print(event.button)
+    
     x = event.pos[0]//SQZIZE
     y = event.pos[1]//SQZIZE
     
@@ -102,7 +101,7 @@ def show_what(x, y):
                 if cont == 0:
                     break
                 cont = 0
-                print(uncover)
+                #print(uncover)
 
             for i in uncover:
                 neighbours = get_neighbours(i[0], i[1], SIZEX, SIZEY)
@@ -153,10 +152,10 @@ def get_neighbours(row, col, rows, cols):
         neighbours.append((row - 1, col + 1))
     return neighbours
 
-def redrawsq(x, y):
+"""def redrawsq(x, y):
     pygame.draw.rect(canvas, (0, 0, 0), (x * SQZIZE, y * SQZIZE, SQZIZE, SQZIZE))
     pygame.display.update()
-
+"""
 def redraw():
     canvas.fill(BLACK)
     for i in range(1, SIZEX):
@@ -171,7 +170,7 @@ def set_mines():
         minex = random.randint(0, SIZEX - 1)
         miney = random.randint(0, SIZEY - 1)
     
-        while mines[0][minex][miney] == 9:
+        while mines[0][minex][miney] == 9 or mines[1][minex][miney] == 3:
             minex = random.randint(0, SIZEX - 1)
             miney = random.randint(0, SIZEY - 1)
         mines[0][minex][miney] = 9
@@ -179,10 +178,12 @@ def set_mines():
     
 def reset(event):
     global mines
-    print(event)
+    global firstclick
+    firstclick = True
+    #print(event)
     redraw()
     mines = [[[0 for j in range(SIZEY)] for i in range(SIZEX)] for p in range(2)]
-    set_mines()
+    #set_mines()
     draw()
 
 #canvas declaration
@@ -191,17 +192,25 @@ pygame.display.set_caption('Minesweeper')
 redraw()
 #minefield
 mines = [[[0 for j in range(SIZEY)] for i in range(SIZEX)] for p in range(2)]
-set_mines()
+
 
 
 #game loop
 while True:
 
-    
-
     for event in pygame.event.get():
 
         if event.type == MOUSEBUTTONUP:
+            
+            if firstclick:
+                firstclick = False
+                x = event.pos[0]//SQZIZE
+                y = event.pos[1]//SQZIZE
+                mines[1][x][y] = 3
+                
+                for i, j in get_neighbours(x, y, SIZEX, SIZEY):
+                    mines[1][i][j] = 3
+                set_mines()
             if event.button == 1:
                 lclick(event)
             elif event.button == 3:
