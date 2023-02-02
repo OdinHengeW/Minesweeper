@@ -30,15 +30,7 @@ def lclick(event):
     x = event.pos[0]//SQZIZE
     y = event.pos[1]//SQZIZE
 
-    if mines[0][x][y] == 9 and mines[1][x][y] != 2:
-        global gameover
-        gameover = True
-        lose = myfont.render("boom yo ass dead. Press enter to reset!", 1, (255,255,255))
-        canvas.blit(lose, (WIDTH / 2 - lose.get_width() / 2, HEIGHT / 2 - lose.get_height() / 2))
-        pygame.draw.rect(canvas, (255, 0, 0), (x * SQZIZE, y * SQZIZE, SQZIZE, SQZIZE))
-        bomb = myfont.render("¤", 1, (255,255,255))
-        canvas.blit(bomb, (x * SQZIZE + (SQZIZE/2 - bomb.get_width() / 2), y * SQZIZE + (SQZIZE/2 - bomb.get_height() / 2)))
-        return
+    
 
     #clicking a number tile reveals surrounding tiles if there is a sufficient amount of flags around the number tile
     if 0 < mines[0][x][y] < 9 and mines[1][x][y] == 1:
@@ -62,20 +54,24 @@ def lclick(event):
 
         
 def draw():    
+    global gameover
     cunt = 0
     for i in range(SIZEX):
         for j in range(SIZEY):
             if mines[1][i][j] == 1:
                 if mines[0][i][j] == 0:
                     pygame.draw.rect(canvas, (128, 128, 128), (i * SQZIZE, j * SQZIZE, SQZIZE, SQZIZE))
-                elif mines[0][i][j] == 9:
-                    pygame.draw.rect(canvas, (255, 0, 0), (i * SQZIZE, j * SQZIZE, SQZIZE, SQZIZE))
-                    bomb = myfont.render("¤", 1, (255,255,255))
-                    canvas.blit(bomb, (i * SQZIZE + (SQZIZE/2 - bomb.get_width() / 2), j * SQZIZE + (SQZIZE/2 - bomb.get_height() / 2)))  
                 elif 0 < mines[0][i][j] < 9:
                     pygame.draw.rect(canvas, (128, 128, 128), (i * SQZIZE, j * SQZIZE, SQZIZE, SQZIZE))
                     nomber = myfont.render(str(mines[0][i][j]), 1, (255,255,0))
                     canvas.blit(nomber, (i * SQZIZE + (SQZIZE/2 - nomber.get_width() / 2), j * SQZIZE + (SQZIZE/2 - nomber.get_height() / 2)))  
+                elif mines[0][i][j] == 9:
+                    pygame.draw.rect(canvas, (255, 0, 0), (i * SQZIZE, j * SQZIZE, SQZIZE, SQZIZE))
+                    bomb = myfont.render("¤", 1, (255,255,255))
+                    canvas.blit(bomb, (i * SQZIZE + (SQZIZE/2 - bomb.get_width() / 2), j * SQZIZE + (SQZIZE/2 - bomb.get_height() / 2))) 
+                    gameover = True
+                    
+                    
             else:
                 
                 if mines[0][i][j] != 9:
@@ -86,6 +82,10 @@ def draw():
         canvas.blit(win, (WIDTH / 2 - win.get_width() / 2, HEIGHT / 2 - win.get_height() / 2))  
     else:
         cunt = 0
+    if gameover:
+        lose = myfont.render("boom yo ass dead. Press enter to reset!", 1, (255,255,255))
+        canvas.blit(lose, (WIDTH / 2 - lose.get_width() / 2, HEIGHT / 2 - lose.get_height() / 2))
+        return
     pygame.display.update()
         
 def rclick(event):
