@@ -1,7 +1,7 @@
 import random
 import pygame, sys
-from pygame.locals import *
 import ctypes
+import time
 
 pygame.init()
 
@@ -15,60 +15,67 @@ BLACK = (0,0,0)
 SCRSIZE = ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1) #add for mac also
 
 SIZEX = 10
-SIZEY = 8
+SIZEY = 6
 DIFFICULTY = 10
 
-SQZIZE = int((SCRSIZE[1] - (SCRSIZE[1] * 0.1))/SIZEY)
+SQZIZE = int((SCRSIZE[1] - (SCRSIZE[1] * 0.1))/SIZEY) 
+TIMERHEIGHT = SCRSIZE[1] / 20
 WIDTH = SIZEX * SQZIZE
-HEIGHT = SIZEY * SQZIZE
-myfont = pygame.font.SysFont("monocraft", int(SCRSIZE[1]/30))
+HEIGHT = SIZEY * SQZIZE 
+TOTHEIGHT = HEIGHT + TIMERHEIGHT
+myfont = pygame.font.SysFont("monocraft", int(2 * SQZIZE / 3))
+timefont = pygame.font.SysFont("monocraft", int(TIMERHEIGHT))
 fleg = myfont.render("F", 1, (255,255,255))
 firstclick = True
 gameover = False
+won = False
 
 def lclick(event):
     x = event.pos[0]//SQZIZE
-    y = event.pos[1]//SQZIZE
+    y = int((event.pos[1] - TIMERHEIGHT)//SQZIZE)
+
 
     
 
     #clicking a number tile reveals surrounding tiles if there is a sufficient amount of flags around the number tile
-    if 0 < mines[0][x][y] < 9 and mines[1][x][y] == 1:
-        bordering_flags = 0
-        neighbours = get_neighbours(x, y, SIZEX, SIZEY)
-        for r, c in neighbours:
-            if mines[1][r][c] == 2:
-                bordering_flags += 1
-        if bordering_flags == mines[0][x][y]:
+    if y >= 0:
+        if 0 < mines[0][x][y] < 9 and mines[1][x][y] == 1:
+            bordering_flags = 0
+            neighbours = get_neighbours(x, y, SIZEX, SIZEY)
             for r, c in neighbours:
-                if mines[1][r][c] != 2:
-                    if mines[0][r][c] == 0:
-                        show_what(r,c)
-                    else:
-                        mines[1][r][c] = 1
-    else:
-        #print(mines[0])
-        show_what(x, y)
-        #redraw()
-    draw()
+                if mines[1][r][c] == 2:
+                    bordering_flags += 1
+            if bordering_flags == mines[0][x][y]:
+                for r, c in neighbours:
+                    if mines[1][r][c] != 2:
+                        if mines[0][r][c] == 0:
+                            show_what(r,c)
+                        else:
+                            mines[1][r][c] = 1
+        else:
+            #print(mines[0])
+            show_what(x, y)
+            #redraw()
+        draw()
 
         
 def draw():    
+    global won
     global gameover
     cunt = 0
     for i in range(SIZEX):
         for j in range(SIZEY):
             if mines[1][i][j] == 1:
                 if mines[0][i][j] == 0:
-                    pygame.draw.rect(canvas, (128, 128, 128), (i * SQZIZE, j * SQZIZE, SQZIZE, SQZIZE))
+                    pygame.draw.rect(canvas, (128, 128, 128), (i * SQZIZE, j * SQZIZE + TIMERHEIGHT, SQZIZE, SQZIZE))
                 elif 0 < mines[0][i][j] < 9:
-                    pygame.draw.rect(canvas, (128, 128, 128), (i * SQZIZE, j * SQZIZE, SQZIZE, SQZIZE))
+                    pygame.draw.rect(canvas, (128, 128, 128), (i * SQZIZE, j * SQZIZE + TIMERHEIGHT, SQZIZE, SQZIZE))
                     nomber = myfont.render(str(mines[0][i][j]), 1, (255,255,0))
-                    canvas.blit(nomber, (i * SQZIZE + (SQZIZE/2 - nomber.get_width() / 2), j * SQZIZE + (SQZIZE/2 - nomber.get_height() / 2)))  
+                    canvas.blit(nomber, (i * SQZIZE + (SQZIZE/2 - nomber.get_width() / 2), j * SQZIZE + (SQZIZE/2 - nomber.get_height() / 2) + TIMERHEIGHT))  
                 elif mines[0][i][j] == 9:
-                    pygame.draw.rect(canvas, (255, 0, 0), (i * SQZIZE, j * SQZIZE, SQZIZE, SQZIZE))
+                    pygame.draw.rect(canvas, (255, 0, 0), (i * SQZIZE, j * SQZIZE + TIMERHEIGHT, SQZIZE, SQZIZE))
                     bomb = myfont.render("¤", 1, (255,255,255))
-                    canvas.blit(bomb, (i * SQZIZE + (SQZIZE/2 - bomb.get_width() / 2), j * SQZIZE + (SQZIZE/2 - bomb.get_height() / 2))) 
+                    canvas.blit(bomb, (i * SQZIZE + (SQZIZE/2 - bomb.get_width() / 2), j * SQZIZE + (SQZIZE/2 - bomb.get_height() / 2) + TIMERHEIGHT)) 
                     gameover = True
                     
                     
@@ -79,7 +86,8 @@ def draw():
                 
     if cunt == 0:
         win = myfont.render("win. Press enter to reset!", 1, (255,255,255))
-        canvas.blit(win, (WIDTH / 2 - win.get_width() / 2, HEIGHT / 2 - win.get_height() / 2))  
+        canvas.blit(win, (WIDTH / 2 - win.get_width() / 2, HEIGHT / 2 - win.get_height() / 2))
+        won = True  
     else:
         cunt = 0
     if gameover:
@@ -91,21 +99,19 @@ def draw():
 def rclick(event):
     
     x = event.pos[0]//SQZIZE
-    y = event.pos[1]//SQZIZE
-    
-    if mines[1][x][y] == 0:
-        mines[1][x][y] = 2
-        canvas.blit(fleg, (x * SQZIZE + (SQZIZE/2 - fleg.get_width() / 2), y * SQZIZE + (SQZIZE/2 - fleg.get_height() / 2)))  
-    elif mines[1][x][y] == 2:
-        mines[1][x][y] = 0
-        #redrawsq(x, y)
-        canvas.fill((0,0,0)) 
-        redraw()
-        draw()
-        for i in range(SIZEX):
+    y = int((event.pos[1] - TIMERHEIGHT)//SQZIZE)
+    if y >= 0:
+        if mines[1][x][y] == 0:
+            mines[1][x][y] = 2
+            canvas.blit(fleg, (x * SQZIZE + (SQZIZE/2 - fleg.get_width() / 2), y * SQZIZE + (SQZIZE/2 - fleg.get_height() / 2) + TIMERHEIGHT))  
+        elif mines[1][x][y] == 2:
+            mines[1][x][y] = 0
+            redrawsq(x, y)
+        """for i in range(SIZEX):
             for j in range(SIZEY):
                 if mines[1][i][j] == 2:
-                    canvas.blit(fleg, (i * SQZIZE + (SQZIZE/2 - fleg.get_width() / 2), j * SQZIZE + (SQZIZE/2 - fleg.get_height() / 2)))  
+                    canvas.blit(fleg, (i * SQZIZE + (SQZIZE/2 - fleg.get_width() / 2), j * SQZIZE + (SQZIZE/2 - fleg.get_height() / 2) + TIMERHEIGHT))  
+    """
     pygame.display.update()
         
         
@@ -187,17 +193,17 @@ def get_neighbours(row, col, rows, cols):
         neighbours.append((row - 1, col + 1))
     return neighbours
 
-"""def redrawsq(x, y):
-    pygame.draw.rect(canvas, (0, 0, 0), (x * SQZIZE, y * SQZIZE, SQZIZE, SQZIZE))
-    pygame.display.update()
-"""
+def redrawsq(x, y):
+    pygame.draw.rect(canvas, (0, 0, 0), (x * SQZIZE + 1, y * SQZIZE + 1 + TIMERHEIGHT, SQZIZE - 1, SQZIZE - 1))
+    #pygame.display.update()
+
 def redraw():
     canvas.fill(BLACK)
     for i in range(1, SIZEX):
-        pygame.draw.line(canvas, WHITE, [i * WIDTH / SIZEX, 0],[i * WIDTH / SIZEX, HEIGHT], 1)
+        pygame.draw.line(canvas, WHITE, [i * WIDTH / SIZEX, TIMERHEIGHT],[i * WIDTH / SIZEX, TOTHEIGHT], 1)
 
-    for i in range(1, SIZEY):
-        pygame.draw.line(canvas, WHITE, [0, i * HEIGHT / SIZEY],[WIDTH, i * HEIGHT / SIZEY], 1)
+    for i in range(SIZEY):
+        pygame.draw.line(canvas, WHITE, [0, (i * HEIGHT / SIZEY) + TIMERHEIGHT],[WIDTH, (i * HEIGHT / SIZEY) + TIMERHEIGHT], 1)
     #pygame.display.update()
     
 def set_mines():
@@ -211,12 +217,14 @@ def set_mines():
         mines[0][minex][miney] = 9
     numbers()
     
-def reset(event):
+def reset():
     global mines
     global firstclick
+    global won
     global gameover
     firstclick = True
     gameover = False
+    won = False
     #print(event)
     redraw()
     mines = [[[0 for j in range(SIZEY)] for i in range(SIZEX)] for p in range(2)]
@@ -224,11 +232,18 @@ def reset(event):
     draw()
 
 #canvas declaration
-canvas = pygame.display.set_mode((WIDTH, HEIGHT))
+canvas = pygame.display.set_mode((WIDTH, TOTHEIGHT))
 pygame.display.set_caption('Minesweeper')
 redraw()
+timer = timefont.render(str(0), 1, (255,255,255))
+#pygame.draw.rect(canvas, (0, 0, 0), ((WIDTH/2) - (timer.get_width()/2) - 20, (TIMERHEIGHT/2) - (timer.get_height()/2), timer.get_width() + 20, timer.get_height()))
+canvas.blit(timer, ((WIDTH/2) - (timer.get_width()/2), (TIMERHEIGHT/2) - (timer.get_height()/2)))
+
 #minefield
 mines = [[[0 for j in range(SIZEY)] for i in range(SIZEX)] for p in range(2)]
+
+dt = 0
+lastdt = 0
 
 
 
@@ -236,27 +251,36 @@ mines = [[[0 for j in range(SIZEY)] for i in range(SIZEX)] for p in range(2)]
 while True:
 
     for event in pygame.event.get():
-        if not gameover:
-            if event.type == MOUSEBUTTONUP:
+        if not gameover and not won:
+            if event.type == pygame.MOUSEBUTTONUP:
                 
-                if firstclick:
-                    firstclick = False
-                    x = event.pos[0]//SQZIZE
-                    y = event.pos[1]//SQZIZE
-                    mines[1][x][y] = 3
-                    
-                    for i, j in get_neighbours(x, y, SIZEX, SIZEY):
-                        mines[1][i][j] = 3
-                    set_mines()
+                
                 if event.button == 1:
+                    if firstclick:
+                        firstclick = False
+                        x = event.pos[0]//SQZIZE
+                        y = int((event.pos[1] - TIMERHEIGHT)//SQZIZE)
+                        if y >= 0:
+                            mines[1][x][y] = 3
+                            
+                            for i, j in get_neighbours(x, y, SIZEX, SIZEY):
+                                mines[1][i][j] = 3
+                            set_mines()
+                            starttime = time.time()
                     lclick(event)
                 elif event.button == 3:
                     rclick(event)
         if event.type == pygame.KEYDOWN:
-            if event.key == K_RETURN:
-                reset(event)
-        elif event.type == QUIT:
+            if event.key == pygame.K_RETURN:
+                reset()
+        elif event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
-            
+    if not firstclick and not gameover and not won:
+        lastdt = dt
+        dt = int(time.time() - starttime) + 1
+        if lastdt != dt:
+            timer = timefont.render(str(dt), 1, (255,255,255))
+            pygame.draw.rect(canvas, (0, 0, 0), ((WIDTH/2) - (timer.get_width()/2) - 20, (TIMERHEIGHT/2) - (timer.get_height()/2), timer.get_width() + 20, timer.get_height()))
+            canvas.blit(timer, ((WIDTH/2) - (timer.get_width()/2), (TIMERHEIGHT/2) - (timer.get_height()/2)))
     pygame.display.update()
