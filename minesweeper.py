@@ -12,18 +12,25 @@ GREEN = (0,255,0)
 BLACK = (0,0,0)
 
 #globals
-SCRSIZE = ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1) #add for mac also
-
-SIZEX = 80
-SIZEY = 60
-DIFFICULTY = 800
+try:
+    SCRSIZE = ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1) #add for mac also
+except:
+    SCRSIZE = (1440, 900)
+SIZEX = 30
+SIZEY = 16
+DIFFICULTY = 99
 SQZIZE = int((SCRSIZE[1] - (SCRSIZE[1] * 0.1))/SIZEY) 
 TIMERHEIGHT = SCRSIZE[1] / 20
 WIDTH = SIZEX * SQZIZE
 HEIGHT = SIZEY * SQZIZE 
 TOTHEIGHT = HEIGHT + TIMERHEIGHT
-myfont = pygame.font.Font(r"C:\Users\Anders\AppData\Local\Microsoft\Windows\Fonts\Monocraft.otf", int(SQZIZE / 2)) #only works on this pc
-timefont = pygame.font.Font(r"C:\Users\Anders\AppData\Local\Microsoft\Windows\Fonts\Monocraft.otf", int(TIMERHEIGHT))
+try:
+    myfont = pygame.font.Font(r"C:\Users\Anders\AppData\Local\Microsoft\Windows\Fonts\Monocraft.otf", int(SQZIZE / 2)) #only works on this pc
+    timefont = pygame.font.Font(r"C:\Users\Anders\AppData\Local\Microsoft\Windows\Fonts\Monocraft.otf", int(TIMERHEIGHT))
+except:
+    myfont = pygame.font.SysFont("Monocraft", int(SQZIZE / 2)) 
+    timefont = pygame.font.SysFont("Monocraft", int(TIMERHEIGHT))
+    
 fleg = myfont.render("F", 1, (255,255,255))
 firstclick = True
 gameover = False
