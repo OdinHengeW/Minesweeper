@@ -14,17 +14,16 @@ BLACK = (0,0,0)
 #globals
 SCRSIZE = ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1) #add for mac also
 
-SIZEX = 10
-SIZEY = 6
-DIFFICULTY = 10
-
+SIZEX = 80
+SIZEY = 60
+DIFFICULTY = 800
 SQZIZE = int((SCRSIZE[1] - (SCRSIZE[1] * 0.1))/SIZEY) 
 TIMERHEIGHT = SCRSIZE[1] / 20
 WIDTH = SIZEX * SQZIZE
 HEIGHT = SIZEY * SQZIZE 
 TOTHEIGHT = HEIGHT + TIMERHEIGHT
-myfont = pygame.font.SysFont("monocraft", int(2 * SQZIZE / 3))
-timefont = pygame.font.SysFont("monocraft", int(TIMERHEIGHT))
+myfont = pygame.font.Font(r"C:\Users\Anders\AppData\Local\Microsoft\Windows\Fonts\Monocraft.otf", int(SQZIZE / 2)) #only works on this pc
+timefont = pygame.font.Font(r"C:\Users\Anders\AppData\Local\Microsoft\Windows\Fonts\Monocraft.otf", int(TIMERHEIGHT))
 fleg = myfont.render("F", 1, (255,255,255))
 firstclick = True
 gameover = False
@@ -230,13 +229,14 @@ def reset():
     mines = [[[0 for j in range(SIZEY)] for i in range(SIZEX)] for p in range(2)]
     #set_mines()
     draw()
+    timer = timefont.render(str(0), 1, (255,255,255))
+    canvas.blit(timer, ((WIDTH/2) - (timer.get_width()/2), (TIMERHEIGHT/2) - (timer.get_height()/2)))
 
 #canvas declaration
 canvas = pygame.display.set_mode((WIDTH, TOTHEIGHT))
 pygame.display.set_caption('Minesweeper')
 redraw()
 timer = timefont.render(str(0), 1, (255,255,255))
-#pygame.draw.rect(canvas, (0, 0, 0), ((WIDTH/2) - (timer.get_width()/2) - 20, (TIMERHEIGHT/2) - (timer.get_height()/2), timer.get_width() + 20, timer.get_height()))
 canvas.blit(timer, ((WIDTH/2) - (timer.get_width()/2), (TIMERHEIGHT/2) - (timer.get_height()/2)))
 
 #minefield
@@ -281,6 +281,6 @@ while True:
         dt = int(time.time() - starttime) + 1
         if lastdt != dt:
             timer = timefont.render(str(dt), 1, (255,255,255))
-            pygame.draw.rect(canvas, (0, 0, 0), ((WIDTH/2) - (timer.get_width()/2) - 20, (TIMERHEIGHT/2) - (timer.get_height()/2), timer.get_width() + 20, timer.get_height()))
+            pygame.draw.rect(canvas, (0, 0, 0), ((WIDTH/2) - (timer.get_width()/2) - 30, (TIMERHEIGHT/2) - (timer.get_height()/2), timer.get_width() + 30, timer.get_height()))
             canvas.blit(timer, ((WIDTH/2) - (timer.get_width()/2), (TIMERHEIGHT/2) - (timer.get_height()/2)))
     pygame.display.update()
