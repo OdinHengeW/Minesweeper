@@ -1,24 +1,17 @@
 import random
 import pygame, sys
-import ctypes
+
 import time
 
 pygame.init()
 
-
-
-
 #globals
-try:
-    SCRSIZE = ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1) #add for mac also
-except:
-    SCRSIZE = (1400, 860)
+SCRSIZE = (pygame.display.Info().current_w, pygame.display.Info().current_h)
 BLACK = (0,0,0)
 WHITE = (255,255,255)
 GRAY = (128,128,128)
 YELLOW = (255,255,0)
 RED = (255,0,0)
-
 
 SIZEX = 30
 SIZEY = 16
@@ -28,12 +21,8 @@ TIMERHEIGHT = SCRSIZE[1] / 20
 WIDTH = SIZEX * SQSIZE
 HEIGHT = SIZEY * SQSIZE 
 TOTHEIGHT = HEIGHT + TIMERHEIGHT
-try:
-    myfont = pygame.font.Font(r"C:\Users\Anders\AppData\Local\Microsoft\Windows\Fonts\Monocraft.otf", int(SQSIZE / 2)) #only works on this pc
-    timefont = pygame.font.Font(r"C:\Users\Anders\AppData\Local\Microsoft\Windows\Fonts\Monocraft.otf", int(TIMERHEIGHT))
-except:
-    myfont = pygame.font.SysFont("Monocraft", int(SQSIZE / 2)) 
-    timefont = pygame.font.SysFont("Monocraft", int(TIMERHEIGHT))
+myfont = pygame.font.SysFont("Arial", int(2 * SQSIZE / 3)) 
+timefont = pygame.font.SysFont("Arial", int(TIMERHEIGHT))
     
 flag = myfont.render("F", 1, WHITE)
 firstclick = True
@@ -220,6 +209,7 @@ mines = [[[0 for j in range(SIZEY)] for i in range(SIZEX)] for p in range(2)]
 dt = 0
 lastdt = 0
 
+print()
 #game loop
 while True:
     for event in pygame.event.get():
@@ -255,7 +245,7 @@ while True:
         dt = int(time.time() - starttime) + 1
         if lastdt != dt:
             timer = timefont.render(str(dt), 1, WHITE)
-            canvas.fill((0, 0, 0), ((WIDTH/2) - (timer.get_width()/2) - 30, (TIMERHEIGHT/2) - (timer.get_height()/2), timer.get_width() + 30, timer.get_height()))
+            canvas.fill((0, 0, 0), ((WIDTH/2) - (timer.get_width()/2) - 30, (TIMERHEIGHT/2) - (timer.get_height()/2), timer.get_width() + 30, TIMERHEIGHT))
             canvas.blit(timer, ((WIDTH/2) - (timer.get_width()/2), (TIMERHEIGHT/2) - (timer.get_height()/2)))
     pygame.display.update()
     time.sleep(1/60)
