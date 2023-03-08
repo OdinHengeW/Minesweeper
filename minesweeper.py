@@ -37,9 +37,12 @@ gameover = False
 won = False
 
 def lclick(event):
-    x = event.pos[0]//SQZIZE
-    y = int((event.pos[1] - TIMERHEIGHT)//SQZIZE)
-
+    try:
+        x = event.pos[0]//SQZIZE
+        y = int((event.pos[1] - TIMERHEIGHT)//SQZIZE)
+    except:
+        x = pygame.mouse.get_pos()[0]//SQZIZE
+        y = int((pygame.mouse.get_pos()[1] - TIMERHEIGHT)//SQZIZE)
     #clicking a number tile reveals surrounding tiles if there is a sufficient amount of flags around the number tile
     if y >= 0:
         if 0 < mines[0][x][y] < 9 and mines[1][x][y] == 1:
@@ -56,9 +59,7 @@ def lclick(event):
                         else:
                             mines[1][r][c] = 1
         else:
-            #print(mines[0])
             show_what(x, y)
-            #redraw()
         draw()
 
 def draw():    
@@ -71,15 +72,12 @@ def draw():
                 if mines[0][i][j] == 0:
                     pygame.Rect.move
                     canvas.fill((128, 128, 128), (i * SQZIZE, j * SQZIZE + TIMERHEIGHT, SQZIZE, SQZIZE))
-                    #pygame.draw.rect(canvas, (128, 128, 128), (i * SQZIZE, j * SQZIZE + TIMERHEIGHT, SQZIZE, SQZIZE))
                 elif 0 < mines[0][i][j] < 9:
                     canvas.fill((128, 128, 128), (i * SQZIZE, j * SQZIZE + TIMERHEIGHT, SQZIZE, SQZIZE))
-                    #pygame.draw.rect(canvas, (128, 128, 128), (i * SQZIZE, j * SQZIZE + TIMERHEIGHT, SQZIZE, SQZIZE))
                     nomber = myfont.render(str(mines[0][i][j]), 1, (255,255,0))
                     canvas.blit(nomber, (i * SQZIZE + (SQZIZE/2 - nomber.get_width() / 2), j * SQZIZE + (SQZIZE/2 - nomber.get_height() / 2) + TIMERHEIGHT))  
                 elif mines[0][i][j] == 9:
                     canvas.fill((255, 0, 0), (i * SQZIZE, j * SQZIZE + TIMERHEIGHT, SQZIZE, SQZIZE))
-                    # pygame.draw.rect(canvas, (255, 0, 0), (i * SQZIZE, j * SQZIZE + TIMERHEIGHT, SQZIZE, SQZIZE))
                     bomb = myfont.render("¤", 1, (255,255,255))
                     canvas.blit(bomb, (i * SQZIZE + (SQZIZE/2 - bomb.get_width() / 2), j * SQZIZE + (SQZIZE/2 - bomb.get_height() / 2) + TIMERHEIGHT)) 
                     gameover = True        
@@ -99,98 +97,48 @@ def draw():
     pygame.display.update()
         
 def rclick(event):
-    try:
-        x = event.pos[0]//SQZIZE
-        y = int((event.pos[1] - TIMERHEIGHT)//SQZIZE)
-    except:
-        x = pygame.mouse.get_pos()[0]//SQZIZE
-        y = int((pygame.mouse.get_pos()[1] - TIMERHEIGHT)//SQZIZE)
-    if y >= 0:
-        if mines[1][x][y] == 0:
-            mines[1][x][y] = 2
-            canvas.blit(fleg, (x * SQZIZE + (SQZIZE/2 - fleg.get_width() / 2), y * SQZIZE + (SQZIZE/2 - fleg.get_height() / 2) + TIMERHEIGHT))  
-        elif mines[1][x][y] == 2:
-            redrawsq(x, y)
-            mines[1][x][y] = 0
-        """for i in range(SIZEX):
-            for j in range(SIZEY):
-                if mines[1][i][j] == 2:
-                    canvas.blit(fleg, (i * SQZIZE + (SQZIZE/2 - fleg.get_width() / 2), j * SQZIZE + (SQZIZE/2 - fleg.get_height() / 2) + TIMERHEIGHT))  
-    """
-    pygame.display.update()
+    global gameover
+    global won
+    if not gameover and not won:    
+        try:
+            x = event.pos[0]//SQZIZE
+            y = int((event.pos[1] - TIMERHEIGHT)//SQZIZE)
+        except:
+            x = pygame.mouse.get_pos()[0]//SQZIZE
+            y = int((pygame.mouse.get_pos()[1] - TIMERHEIGHT)//SQZIZE)
+        if y >= 0:
+            if mines[1][x][y] == 0:
+                mines[1][x][y] = 2
+                canvas.blit(fleg, (x * SQZIZE + (SQZIZE/2 - fleg.get_width() / 2), y * SQZIZE + (SQZIZE/2 - fleg.get_height() / 2) + TIMERHEIGHT))  
+            elif mines[1][x][y] == 2:
+                redrawsq(x, y)
+                mines[1][x][y] = 0
+        pygame.display.update()
         
 def show_what(x, y):
     uncover = []
 
-    
-    
-    #ändra status på klickad ruta
-        #while
-            #grannar till rutan
-                #om noll
-                    #visa
-                    #lägg till i lista för att kolla dess grannar
-            #ny huvudruta
-            #ta bort ny huvudruta från lista
     if mines[1][x][y] != 2:
-        uncover.append((x, y)) # nånting funkar inte, kan trycka på flagga o starta skiten, kanske är i set_mines()
+        uncover.append((x, y)) 
         if mines[0][x][y] == 0 and mines[1][x][y] != 1:
             mines[1][x][y] = 1
             neigbours = get_neighbours(x, y, SIZEX, SIZEY)
         
             while 1:
-                #mines[1][uncover[0][0]][uncover[0][1]] = 1
                 for r, c in neigbours:
                     if mines[0][r][c] < 9 and mines[1][r][c] != 1:
                         mines[1][r][c] = 1
                         if mines[0][r][c] == 0:
                             uncover.append((r, c))
                              
-                if len(uncover) > 0: # cont != 0:        
+                if len(uncover) > 0:       
                     neigbours = get_neighbours(uncover[0][0], uncover[0][1], SIZEX, SIZEY)
                     uncover.pop(0)
 
                 else:
-                    print("b")
                     break
         else:
             mines[1][x][y] = 1
-    
-    ## checks all the empty tiles around the pressed tile
-    #if mines[1][x][y] != 2:
-    #    if mines[0][x][y] == 0:
-    #        while 1:
-    #            neighbours = get_neighbours(uncover[0][0], uncover[0][1], SIZEX, SIZEY)
-    #            for r, c in neighbours:
-    #                if mines[1][r][c] != 1 and mines[0][r][c] == 0 and (r, c) not in uncover:
-    #                    uncover.append((r, c))
-    #            for i, j in uncover:
-    #                for r, c in get_neighbours(i, j, SIZEX, SIZEY):
-    #                    if mines[0][r][c] == 0 and mines[1][r][c] == 0 and (r, c) not in uncover:
-    #                        uncover.append((r, c))
-    #                        cont += 1
-    #            if cont == 0:
-    #                break
-    #            cont = 0
-    #            #print(uncover)
-#
-    #        #adds all the number tiles that lie against an empty tile
-    #        for i in uncover:
-    #            neighbours = get_neighbours(i[0], i[1], SIZEX, SIZEY)
-    #            for r, c in neighbours:
-    #                if 0 < mines[0][r][c] < 9 and mines[1][r][c] != 1 and (r, c) not in uncover:
-    #                    additional.append((r, c))
-    #        
-    #        #adds all the number tiles to the list of empty tiles
-    #        for i in additional:
-    #            uncover.append(i)
-    #        
-    #        #changes status of all tiles in uncover list such that they are to be shown 
-    #        while len(uncover) > 0:
-    #            mines[1][uncover[0][0]][uncover[0][1]] = 1
-    #            uncover.pop(0)
-    #    else:
-    #        mines[1][x][y] = 1
 
 def numbers():
     count = 0
@@ -218,7 +166,7 @@ def redrawsq(x, y):
         canvas.fill((0, 0, 0), (x * SQZIZE + 1, y * SQZIZE + 1 + TIMERHEIGHT, SQZIZE - 1, SQZIZE - 1))
     else:
         canvas.fill((128,128,128), (x * SQZIZE + 1, y * SQZIZE + 1 + TIMERHEIGHT, SQZIZE - 1, SQZIZE - 1))
-    #pygame.draw.rect(canvas, (0, 0, 0), (x * SQZIZE + 1, y * SQZIZE + 1 + TIMERHEIGHT, SQZIZE - 1, SQZIZE - 1))
+    
     #pygame.display.update()
 
 def redraw():
@@ -248,10 +196,8 @@ def reset():
     firstclick = True
     gameover = False
     won = False
-    #print(event)
     redraw()
     mines = [[[0 for j in range(SIZEY)] for i in range(SIZEX)] for p in range(2)]
-    #set_mines()
     draw()
     timer = timefont.render(str(0), 1, (255,255,255))
     canvas.blit(timer, ((WIDTH/2) - (timer.get_width()/2), (TIMERHEIGHT/2) - (timer.get_height()/2)))
@@ -294,6 +240,9 @@ while True:
                 reset()
             elif event.key == pygame.K_SPACE:
                 rclick(event)
+            elif event.key == pygame.K_LALT:
+                if not firstclick and not gameover and not won:
+                    lclick(event)
         elif event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
@@ -303,7 +252,6 @@ while True:
         if lastdt != dt:
             timer = timefont.render(str(dt), 1, (255,255,255))
             canvas.fill((0, 0, 0), ((WIDTH/2) - (timer.get_width()/2) - 30, (TIMERHEIGHT/2) - (timer.get_height()/2), timer.get_width() + 30, timer.get_height()))
-            # pygame.draw.rect(canvas, (0, 0, 0), ((WIDTH/2) - (timer.get_width()/2) - 30, (TIMERHEIGHT/2) - (timer.get_height()/2), timer.get_width() + 30, timer.get_height()))
             canvas.blit(timer, ((WIDTH/2) - (timer.get_width()/2), (TIMERHEIGHT/2) - (timer.get_height()/2)))
     pygame.display.update()
     time.sleep(1/60)
