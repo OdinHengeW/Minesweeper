@@ -1,12 +1,12 @@
 import random
 import pygame, sys
-
 import time
+import datetime
 
 pygame.init()
 
 #globals
-SCRSIZE = (pygame.display.Info().current_w, pygame.display.Info().current_h)
+SCRSIZE = (pygame.display.Info().current_w, pygame.display.Info().current_h - 100)
 BLACK = (0,0,0)
 WHITE = (255,255,255)
 GRAY = (128,128,128)
@@ -15,19 +15,23 @@ RED = (255,0,0)
 
 SIZEX = 30
 SIZEY = 16
-DIFFICULTY = 99
-SQSIZE = int((SCRSIZE[1] - (SCRSIZE[1] * 0.1))/SIZEY) 
-TIMERHEIGHT = SCRSIZE[1] / 20
-WIDTH = SIZEX * SQSIZE
-HEIGHT = SIZEY * SQSIZE 
+DIFFICULTY = 30
+RATIO = SIZEX / SIZEY
+TIMERHEIGHT = int(SCRSIZE[1] / 20)
+WIDTH = SCRSIZE[0]
+HEIGHT = int(SIZEY * (WIDTH // SIZEX))
+
 TOTHEIGHT = HEIGHT + TIMERHEIGHT
+SQSIZE = WIDTH // SIZEX 
+
 myfont = pygame.font.SysFont("Arial", int(2 * SQSIZE / 3)) 
 timefont = pygame.font.SysFont("Arial", int(TIMERHEIGHT))
-    
+  
 flag = myfont.render("F", 1, WHITE)
 firstclick = True
 gameover = False
 won = False
+storedtime = False
 
 def lclick(event):
     try:
@@ -73,14 +77,16 @@ def draw():
                     canvas.fill(RED, (i * SQSIZE, j * SQSIZE + TIMERHEIGHT, SQSIZE, SQSIZE))
                     bomb = myfont.render("¤", 1, (255,255,255))
                     canvas.blit(bomb, (i * SQSIZE + (SQSIZE/2 - bomb.get_width() / 2), j * SQSIZE + (SQSIZE/2 - bomb.get_height() / 2) + TIMERHEIGHT)) 
-                    gameover = True        
+                    gameover = True 
             else:   
                 if mines[0][i][j] != 9:
                     bombcount += 1
+                if mines[1][i][j] == 2:
+                    canvas.blit(flag, (i * SQSIZE + (SQSIZE/2 - flag.get_width() / 2), j * SQSIZE + (SQSIZE/2 - flag.get_height() / 2) + TIMERHEIGHT))  
     if bombcount == 0:
         win = myfont.render("win. Press enter to reset!", 1, WHITE)
         canvas.blit(win, (WIDTH / 2 - win.get_width() / 2, HEIGHT / 2 - win.get_height() / 2))
-        won = True  
+        won = True 
     else:
         bombcount = 0
     if gameover:
@@ -160,7 +166,7 @@ def redrawsq(x, y):
     else:
         canvas.fill(GRAY, (x * SQSIZE + 1, y * SQSIZE + 1 + TIMERHEIGHT, SQSIZE - 1, SQSIZE - 1))
     
-    #pygame.display.update()
+
 
 def redraw():
     canvas.fill(BLACK)
@@ -169,7 +175,7 @@ def redraw():
 
     for i in range(SIZEY):
         pygame.draw.line(canvas, WHITE, [0, (i * HEIGHT / SIZEY) + TIMERHEIGHT],[WIDTH, (i * HEIGHT / SIZEY) + TIMERHEIGHT], 1)
-    #pygame.display.update()
+
     
 def set_mines():
     for i in range(DIFFICULTY):
@@ -186,17 +192,54 @@ def reset():
     global firstclick
     global won
     global gameover
+    global storedtime
     firstclick = True
     gameover = False
     won = False
+    storedtime = False
     redraw()
     mines = [[[0 for j in range(SIZEY)] for i in range(SIZEX)] for p in range(2)]
     draw()
     timer = timefont.render(str(0), 1, WHITE)
     canvas.blit(timer, ((WIDTH/2) - (timer.get_width()/2), (TIMERHEIGHT/2) - (timer.get_height()/2)))
 
+#Recalculates the globals based on the new size of the window.
+def redo_globals():
+    global myfont 
+    global canvas
+    global RATIO
+    global SQSIZE
+    #global TIMERHEIGHT
+    global WIDTH
+    global HEIGHT
+    global TOTHEIGHT
+    
+    new_width = canvas.get_width()
+    new_height = canvas.get_height()
+    if new_width != WIDTH:
+        SQSIZE = int(new_width / SIZEX)
+        WIDTH = int(SQSIZE * SIZEX)
+        HEIGHT = int(WIDTH / RATIO)
+    elif new_height != HEIGHT:
+        SQSIZE = int(new_height / SIZEY)
+        HEIGHT = int(SQSIZE * SIZEY)
+        WIDTH = int(HEIGHT * RATIO)
+    TOTHEIGHT = TIMERHEIGHT + HEIGHT
+    
+    myfont = pygame.font.SysFont("Arial", int(2 * SQSIZE / 3))
+    canvas = pygame.display.set_mode((WIDTH, TOTHEIGHT), pygame.RESIZABLE)
+    
+
+    
+def store_time(dt):
+    global storedtime
+    score = "time: " + str(dt) + " width: " + str(SIZEX) + " height: " + str(SIZEY) + " number of bombs: " + str(DIFFICULTY) + " date: " + str(datetime.date.today())
+    with open("times.txt", "a") as writefile:
+        writefile.write(score + "\n")
+    storedtime = True
 #canvas declaration
-canvas = pygame.display.set_mode((WIDTH, TOTHEIGHT))
+canvas = pygame.display.set_mode((WIDTH, TOTHEIGHT), pygame.RESIZABLE)
+
 pygame.display.set_caption('Minesweeper')
 redraw()
 timer = timefont.render(str(0), 1, WHITE)
@@ -209,10 +252,14 @@ mines = [[[0 for j in range(SIZEY)] for i in range(SIZEX)] for p in range(2)]
 dt = 0
 lastdt = 0
 
-print()
+
 #game loop
 while True:
     for event in pygame.event.get():
+        if event.type == pygame.VIDEORESIZE:
+            redo_globals()
+            redraw()
+            draw()
         if not gameover and not won:
             if event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1:
@@ -247,5 +294,7 @@ while True:
             timer = timefont.render(str(dt), 1, WHITE)
             canvas.fill((0, 0, 0), ((WIDTH/2) - (timer.get_width()/2) - 30, (TIMERHEIGHT/2) - (timer.get_height()/2), timer.get_width() + 30, TIMERHEIGHT))
             canvas.blit(timer, ((WIDTH/2) - (timer.get_width()/2), (TIMERHEIGHT/2) - (timer.get_height()/2)))
+    if won and not storedtime:
+        store_time(dt)
     pygame.display.update()
     time.sleep(1/60)
