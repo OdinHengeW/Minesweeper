@@ -1,11 +1,11 @@
 import random
 import pygame, sys
 import time
-import datetime
 
 pygame.init()
 
 #globals
+#colours
 SCRSIZE = (pygame.display.Info().current_w, pygame.display.Info().current_h - 100)
 BLACK = (0,0,0)
 WHITE = (255,255,255)
@@ -13,26 +13,29 @@ GRAY = (128,128,128)
 YELLOW = (255,255,0)
 RED = (255,0,0)
 
+#Game parameters
 SIZEX = 30
 SIZEY = 16
-DIFFICULTY = 30
+DIFFICULTY = 99
+
+#window size
 RATIO = SIZEX / SIZEY
 TIMERHEIGHT = int(SCRSIZE[1] / 20)
 WIDTH = SCRSIZE[0]
 HEIGHT = int(SIZEY * (WIDTH // SIZEX))
-
 TOTHEIGHT = HEIGHT + TIMERHEIGHT
 SQSIZE = WIDTH // SIZEX 
 
-myfont = pygame.font.SysFont("Arial", int(2 * SQSIZE / 3)) 
-timefont = pygame.font.SysFont("Arial", int(TIMERHEIGHT))
+#fonts
+FONT = pygame.font.SysFont("Arial", int(2 * SQSIZE / 3)) 
+TIMEFONT = pygame.font.SysFont("Arial", int(TIMERHEIGHT))
   
-flag = myfont.render("F", 1, WHITE)
+#status of game
 firstclick = True
 gameover = False
 won = False
-storedtime = False
 
+#Reveals squares that should be shown when left clicking
 def lclick(event):
     try:
         x = event.pos[0]//SQSIZE
@@ -58,7 +61,7 @@ def lclick(event):
         else:
             show_what(x, y)
         draw()
-
+#Draws squares on board based on their value in "mines"
 def draw():    
     global won
     global gameover
@@ -67,34 +70,35 @@ def draw():
         for j in range(SIZEY):
             if mines[1][i][j] == 1:
                 if mines[0][i][j] == 0:
-                    pygame.Rect.move
                     canvas.fill(GRAY, (i * SQSIZE, j * SQSIZE + TIMERHEIGHT, SQSIZE, SQSIZE))
                 elif 0 < mines[0][i][j] < 9:
                     canvas.fill(GRAY, (i * SQSIZE, j * SQSIZE + TIMERHEIGHT, SQSIZE, SQSIZE))
-                    nomber = myfont.render(str(mines[0][i][j]), 1, YELLOW)
+                    nomber = FONT.render(str(mines[0][i][j]), 1, YELLOW)
                     canvas.blit(nomber, (i * SQSIZE + (SQSIZE/2 - nomber.get_width() / 2), j * SQSIZE + (SQSIZE/2 - nomber.get_height() / 2) + TIMERHEIGHT))  
                 elif mines[0][i][j] == 9:
                     canvas.fill(RED, (i * SQSIZE, j * SQSIZE + TIMERHEIGHT, SQSIZE, SQSIZE))
-                    bomb = myfont.render("¤", 1, (255,255,255))
+                    bomb = FONT.render("¤", 1, (255,255,255))
                     canvas.blit(bomb, (i * SQSIZE + (SQSIZE/2 - bomb.get_width() / 2), j * SQSIZE + (SQSIZE/2 - bomb.get_height() / 2) + TIMERHEIGHT)) 
                     gameover = True 
             else:   
                 if mines[0][i][j] != 9:
                     bombcount += 1
                 if mines[1][i][j] == 2:
+                    flag = FONT.render("F", 1, WHITE)
                     canvas.blit(flag, (i * SQSIZE + (SQSIZE/2 - flag.get_width() / 2), j * SQSIZE + (SQSIZE/2 - flag.get_height() / 2) + TIMERHEIGHT))  
     if bombcount == 0:
-        win = myfont.render("win. Press enter to reset!", 1, WHITE)
+        win = FONT.render("You won! Press enter to reset!", 1, WHITE)
         canvas.blit(win, (WIDTH / 2 - win.get_width() / 2, HEIGHT / 2 - win.get_height() / 2))
-        won = True 
+        won = True
     else:
         bombcount = 0
     if gameover:
-        lose = myfont.render("boom yo ass dead. Press enter to reset!", 1, WHITE)
+        lose = FONT.render("You lost! Press enter to reset!", 1, WHITE)
         canvas.blit(lose, (WIDTH / 2 - lose.get_width() / 2, HEIGHT / 2 - lose.get_height() / 2))
         return
     pygame.display.update()
-        
+  
+#Places and removes flags      
 def rclick(event):
     global gameover
     global won
@@ -108,37 +112,36 @@ def rclick(event):
         if y >= 0:
             if mines[1][x][y] == 0:
                 mines[1][x][y] = 2
+                flag = FONT.render("F", 1, WHITE)
                 canvas.blit(flag, (x * SQSIZE + (SQSIZE/2 - flag.get_width() / 2), y * SQSIZE + (SQSIZE/2 - flag.get_height() / 2) + TIMERHEIGHT))  
             elif mines[1][x][y] == 2:
-                redrawsq(x, y)
+                canvas.fill(BLACK, (x * SQSIZE + 1, y * SQSIZE + 1 + TIMERHEIGHT, SQSIZE - 1, SQSIZE - 1))
                 mines[1][x][y] = 0
         pygame.display.update()
         
+#Fetches the squares that should be visible after a left click
 def show_what(x, y):
     uncover = []
-
     if mines[1][x][y] != 2:
         uncover.append((x, y)) 
         if mines[0][x][y] == 0 and mines[1][x][y] != 1:
             mines[1][x][y] = 1
             neigbours = get_neighbours(x, y, SIZEX, SIZEY)
-        
             while 1:
                 for r, c in neigbours:
                     if mines[0][r][c] < 9 and mines[1][r][c] != 1:
                         mines[1][r][c] = 1
                         if mines[0][r][c] == 0:
                             uncover.append((r, c))
-                             
                 if len(uncover) > 0:       
                     neigbours = get_neighbours(uncover[0][0], uncover[0][1], SIZEX, SIZEY)
                     uncover.pop(0)
-
                 else:
                     break
         else:
             mines[1][x][y] = 1
 
+#Gives squares with neighbouring bombs a value in "mines" that represents the number of bombs around it.
 def numbers():
     count = 0
     for i in range(SIZEX):
@@ -150,7 +153,8 @@ def numbers():
                         count += 1
                 mines[0][i][j] = count
                 count = 0
-            
+       
+#Gets the neighbours of a given square     
 def get_neighbours(row, col, rows, cols):
     neighbours = []
     for i in range(-1, 2):
@@ -160,14 +164,7 @@ def get_neighbours(row, col, rows, cols):
                     neighbours.append((row + i, col + j))
     return neighbours
 
-def redrawsq(x, y):
-    if mines[1][x][y] == 2:
-        canvas.fill(BLACK, (x * SQSIZE + 1, y * SQSIZE + 1 + TIMERHEIGHT, SQSIZE - 1, SQSIZE - 1))
-    else:
-        canvas.fill(GRAY, (x * SQSIZE + 1, y * SQSIZE + 1 + TIMERHEIGHT, SQSIZE - 1, SQSIZE - 1))
-    
-
-
+#Redraws the grid lines on the screen
 def redraw():
     canvas.fill(BLACK)
     for i in range(1, SIZEX):
@@ -176,7 +173,7 @@ def redraw():
     for i in range(SIZEY):
         pygame.draw.line(canvas, WHITE, [0, (i * HEIGHT / SIZEY) + TIMERHEIGHT],[WIDTH, (i * HEIGHT / SIZEY) + TIMERHEIGHT], 1)
 
-    
+#Randomly places mines 
 def set_mines():
     for i in range(DIFFICULTY):
         minex = random.randint(0, SIZEX - 1)
@@ -187,29 +184,28 @@ def set_mines():
         mines[0][minex][miney] = 9
     numbers()
     
+#Resets globals and other variables
 def reset():
     global mines
+    global timer
     global firstclick
     global won
     global gameover
-    global storedtime
     firstclick = True
     gameover = False
     won = False
-    storedtime = False
     redraw()
     mines = [[[0 for j in range(SIZEY)] for i in range(SIZEX)] for p in range(2)]
     draw()
-    timer = timefont.render(str(0), 1, WHITE)
+    timer = TIMEFONT.render(str(0), 1, WHITE)
     canvas.blit(timer, ((WIDTH/2) - (timer.get_width()/2), (TIMERHEIGHT/2) - (timer.get_height()/2)))
 
 #Recalculates the globals based on the new size of the window.
 def redo_globals():
-    global myfont 
+    global FONT 
     global canvas
     global RATIO
     global SQSIZE
-    #global TIMERHEIGHT
     global WIDTH
     global HEIGHT
     global TOTHEIGHT
@@ -226,24 +222,20 @@ def redo_globals():
         WIDTH = int(HEIGHT * RATIO)
     TOTHEIGHT = TIMERHEIGHT + HEIGHT
     
-    myfont = pygame.font.SysFont("Arial", int(2 * SQSIZE / 3))
+    FONT = pygame.font.SysFont("Arial", int(2 * SQSIZE / 3))
     canvas = pygame.display.set_mode((WIDTH, TOTHEIGHT), pygame.RESIZABLE)
-    
 
-    
-def store_time(dt):
-    global storedtime
-    score = "time: " + str(dt) + " width: " + str(SIZEX) + " height: " + str(SIZEY) + " number of bombs: " + str(DIFFICULTY) + " date: " + str(datetime.date.today())
-    with open("times.txt", "a") as writefile:
-        writefile.write(score + "\n")
-    storedtime = True
-#canvas declaration
+#canvas declaration    
 canvas = pygame.display.set_mode((WIDTH, TOTHEIGHT), pygame.RESIZABLE)
 
+#wondow setup
 pygame.display.set_caption('Minesweeper')
 redraw()
-timer = timefont.render(str(0), 1, WHITE)
+timer = TIMEFONT.render(str(0), 1, WHITE)
 canvas.blit(timer, ((WIDTH/2) - (timer.get_width()/2), (TIMERHEIGHT/2) - (timer.get_height()/2)))
+
+#initializing clock object
+clock = pygame.time.Clock()
 
 #minefield
 mines = [[[0 for j in range(SIZEY)] for i in range(SIZEX)] for p in range(2)]
@@ -252,7 +244,6 @@ mines = [[[0 for j in range(SIZEY)] for i in range(SIZEX)] for p in range(2)]
 dt = 0
 lastdt = 0
 
-
 #game loop
 while True:
     for event in pygame.event.get():
@@ -260,6 +251,7 @@ while True:
             redo_globals()
             redraw()
             draw()
+            canvas.blit(timer, ((WIDTH/2) - (timer.get_width()/2), (TIMERHEIGHT/2) - (timer.get_height()/2)))
         if not gameover and not won:
             if event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1:
@@ -291,10 +283,8 @@ while True:
         lastdt = dt
         dt = int(time.time() - starttime) + 1
         if lastdt != dt:
-            timer = timefont.render(str(dt), 1, WHITE)
+            timer = TIMEFONT.render(str(dt), 1, WHITE)
             canvas.fill((0, 0, 0), ((WIDTH/2) - (timer.get_width()/2) - 30, (TIMERHEIGHT/2) - (timer.get_height()/2), timer.get_width() + 30, TIMERHEIGHT))
             canvas.blit(timer, ((WIDTH/2) - (timer.get_width()/2), (TIMERHEIGHT/2) - (timer.get_height()/2)))
-    if won and not storedtime:
-        store_time(dt)
     pygame.display.update()
-    time.sleep(1/60)
+    clock.tick(60)
